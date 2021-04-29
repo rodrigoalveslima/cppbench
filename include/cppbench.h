@@ -67,18 +67,20 @@ void run_benchmark(const std::function<void()>& function,
   std::vector<BenchmarkExecutionLog> logs;
   auto t0 = std::chrono::steady_clock::now();
   for (auto i = 1; i <= max_executions; i++) {
-    set_up();
+    if (set_up != nullptr)
+      set_up();
     auto start_time = std::chrono::steady_clock::now();
     function();
     std::chrono::duration<double, std::milli> exec_time_milli = \
         std::chrono::steady_clock::now() - start_time;
-    tear_down();
+    if (tear_down != nullptr)
+      tear_down();
     std::chrono::duration<double, std::milli> timestamp_milli = start_time - t0;
     logs.push_back(BenchmarkExecutionLog{timestamp_milli.count(),
         exec_time_milli.count()});
     if (timestamp_milli.count() > max_duration * 1000) {
       LOGMSG("Benchmark timed out.");
-      break
+      break;
     }
   }
   // Write execution logs to the output file in CSV format.
