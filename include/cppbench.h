@@ -55,7 +55,7 @@ typedef struct BenchmarkExecutionLog {
 // - output_filepath: path to the output file.
 void run_benchmark(const std::function<void()>& function,
     const std::function<void()>& set_up, const std::function<void()>& tear_down,
-    const int& max_executions, const int& max_duration,
+    const int max_executions, const int max_duration,
     const std::string& output_filepath) {
   // Log benchmark configuration.
   LOGMSG("Starting benchmark...\n"
