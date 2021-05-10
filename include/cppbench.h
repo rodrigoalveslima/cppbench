@@ -14,14 +14,14 @@
 
 
 // Logging and debugging utilities.
-#define LOGMSG(x) std::cout << timestamp() << " " << x << std::endl
+#define LOGMSG(x) std::cout << timestamp_tag() << " " << x << std::endl
 // #define DEBUG 1
 #ifdef DEBUG
   #define DEBUGMSG(x) LOGMSG(x)
 #else
   #define DEBUGMSG(x)
 #endif
-inline std::string timestamp() {
+inline std::string timestamp_tag() {
   auto now = std::chrono::system_clock::now();
   auto now_c = std::chrono::system_clock::to_time_t(now);
   auto now_tm = *std::localtime(&now_c);
@@ -34,11 +34,11 @@ inline std::string timestamp() {
 // Execution log of the benchmarked function.
 //
 // Attributes:
-// - timestamp_milli: timestamp (since the benchmark started) in milliseconds.
-// - exec_time_milli: execution time in milliseconds.
+// - timestamp: timestamp (since the benchmark started) in seconds.
+// - exec_time: execution time in seconds.
 typedef struct BenchmarkExecutionLog {
-  double timestamp_milli;
-  double exec_time_milli;
+  double timestamp;
+  double exec_time;
 } BenchmarkExecutionLog;
 
 
@@ -71,14 +71,13 @@ void run_benchmark(const std::function<void()>& function,
       set_up();
     auto start_time = std::chrono::steady_clock::now();
     function();
-    std::chrono::duration<double, std::milli> exec_time_milli = \
+    std::chrono::duration<double> exec_time = \
         std::chrono::steady_clock::now() - start_time;
     if (tear_down != nullptr)
       tear_down();
-    std::chrono::duration<double, std::milli> timestamp_milli = start_time - t0;
-    logs.push_back(BenchmarkExecutionLog{timestamp_milli.count(),
-        exec_time_milli.count()});
-    if (timestamp_milli.count() > max_duration * 1000) {
+    std::chrono::duration<double> timestamp = start_time - t0;
+    logs.push_back(BenchmarkExecutionLog{timestamp.count(), exec_time.count()});
+    if (timestamp.count() > max_duration) {
       LOGMSG("Benchmark timed out.");
       break;
     }
@@ -87,9 +86,9 @@ void run_benchmark(const std::function<void()>& function,
   LOGMSG("Writing logs to the output file...");
   std::ofstream output_file;
   output_file.open(output_filepath);
-  output_file << "timestamp_milli,exec_time_milli" << std::endl;
+  output_file << "timestamp,exec_time" << std::endl;
   for (const auto& log : logs)
-    output_file << std::fixed << std::setprecision(3) <<
-        log.timestamp_milli << "," << log.exec_time_milli << std::endl;
+    output_file << std::fixed << std::setprecision(9) << log.timestamp << "," <<
+        log.exec_time << std::endl;
   output_file.close();
 }
